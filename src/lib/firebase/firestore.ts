@@ -15,25 +15,10 @@ import {
 } from 'firebase/firestore';
 import { db } from './clientApp';
 
-export interface Space {
-  name: string;
-  id: string;
-  projects: { [id: string]: Project };
-  last_tracked: Timestamp;
-}
-
 export interface StoredSpace {
   name: string;
   id: string;
   project_ids: string[];
-  last_tracked: Timestamp;
-}
-
-export interface Project {
-  name: string;
-  id: string;
-  parent_space: string;
-  tasks: { [id: string]: Task };
   last_tracked: Timestamp;
 }
 
@@ -43,15 +28,6 @@ export interface StoredProject {
   parent_space: string;
   task_ids: string[];
   last_tracked: Timestamp;
-}
-
-export interface Task {
-  name: string;
-  id: string;
-  parent_path: string;
-  last_tracked: Timestamp;
-  subtasks: { [id: string]: Task };
-  isSubtask: boolean;
 }
 
 export interface StoredTask {
@@ -177,84 +153,6 @@ export async function getAllTasks(filters: QueryFilter = QueryFilterNone): Promi
     }
   });
   return fetchedTasks;
-}
-
-export function constructSpaces(
-  stored_spaces: StoredSpace[],
-  stored_projects: StoredProject[],
-  stored_tasks: StoredTask[],
-): Space[] {
-  var spaces: Space[] = [];
-  var projects: { [id: string]: Project } = {};
-  var tasks: { [id: string]: Task } = {};
-  var subtasks: { [id: string]: Task } = {};
-
-  // subtasks
-  stored_tasks.forEach((stored_task) => {
-    if (stored_task.parent_path.length > 73) {
-      subtasks[stored_task.id] = {
-        name: stored_task.name,
-        id: stored_task.id,
-        parent_path: stored_task.parent_path,
-        last_tracked: stored_task.last_tracked,
-        subtasks: {},
-        isSubtask: true,
-      } as Task;
-    }
-  });
-
-  // tasks
-  stored_tasks.forEach((stored_task) => {
-    if (stored_task.parent_path.length == 73) {
-      tasks[stored_task.id] = {
-        name: stored_task.name,
-        id: stored_task.id,
-        parent_path: stored_task.parent_path,
-        last_tracked: stored_task.last_tracked,
-        subtasks: Object.fromEntries(
-          stored_task.subtask_ids.map((subtask_id) => {
-            if (subtasks[subtask_id]) return [subtask_id, subtasks[subtask_id]];
-            else throw new Error(`SubTask ${subtask_id} not found [task: ${stored_task.id}]`);
-          }),
-        ),
-        isSubtask: false,
-      } as Task;
-    }
-    console.log(tasks[stored_task.id]);
-  });
-
-  // projects
-  stored_projects.forEach((stored_project) => {
-    projects[stored_project.id] = {
-      name: stored_project.name,
-      id: stored_project.id,
-      parent_space: stored_project.parent_space,
-      last_tracked: stored_project.last_tracked,
-      tasks: Object.fromEntries(
-        stored_project.task_ids.map((task_id) => {
-          if (tasks[task_id]) return [task_id, tasks[task_id]];
-          else throw new Error(`Task ${task_id} not found [project: ${stored_project.id}]`);
-        }),
-      ),
-    } as Project;
-  });
-
-  // spaces
-  stored_spaces.forEach((stored_space) => {
-    spaces.push({
-      name: stored_space.name,
-      id: stored_space.id,
-      last_tracked: stored_space.last_tracked,
-      projects: Object.fromEntries(
-        stored_space.project_ids.map((project_id) => {
-          if (projects[project_id]) return [project_id, projects[project_id]];
-          else throw new Error(`Project ${project_id} not found [space: ${stored_space.id}]`);
-        }),
-      ),
-    } as Space);
-  });
-
-  return spaces;
 }
 
 //////////////////////////////////////

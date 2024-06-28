@@ -16,17 +16,21 @@ import {
   Tab,
   Tabs,
 } from '@nextui-org/react';
-import { useSpaces } from '../context/SpacesProvider';
-import { Project, Space, Task } from '@/lib/firebase/firestore';
+import { useSpaces, Project, Space, Task } from '../context/DbProvider';
+
+type RunningState = 'unavailable' | 'runnable' | 'running';
+const RUNSTAT_UNAVAILABLE: RunningState = 'unavailable';
+const RUNSTAT_RUNNABLE: RunningState = 'runnable';
+const RUNSTAT_RUNNING: RunningState = 'running';
 
 export default function Header() {
   const { user, isLoading, signout } = useAuth();
-  const { spaces } = useSpaces();
+  const { spaces, projects, tasks, subtasks, tableInfo } = useSpaces();
   const [selectedSpace, setSelectedSpace] = React.useState<Selection>(new Set([]));
   const [selectedProject, setSelectedProject] = React.useState<Selection>(new Set([]));
   const [selectedTask, setSelectedTask] = React.useState<Selection>(new Set([]));
   const [selectedSubTask, setSelectedSubTask] = React.useState<Selection>(new Set([]));
-  const [canRun, setCanRun] = React.useState<boolean>(false);
+  const [runningState, setRunningState] = React.useState<RunningState>(RUNSTAT_UNAVAILABLE);
 
   const { pageTo } = usePaging();
   const [selectedPage, setSelectedPage] = useState<string>(pages[0].id);
@@ -48,24 +52,48 @@ export default function Header() {
     return [...Object.values(spaces)].sort((a, b) => a.name.localeCompare(b.name));
   }, [spaces]);
 
-  function sortedProjects(space: Space) {
-    return [...Object.values(space.projects)].sort((a, b) => a.name.localeCompare(b.name));
-  }
+  const sortedProjects = React.useMemo(() => {
+    if (!selectedSpace || selectedSpace == 'all' || Array.from(selectedSpace).length == 0) {
+      return [];
+    }
+    return [...Object.values(spaces[Array.from(selectedSpace)[0]].projects)].sort((a, b) =>
+      a.name.localeCompare(b.name),
+    );
+  }, [spaces, selectedSpace]);
 
-  function sortedTasks(project: Project) {
-    return [...Object.values(project.tasks)].sort((a, b) => a.name.localeCompare(b.name));
-  }
+  const sortedTasks = React.useMemo(() => {
+    if (!selectedProject || selectedProject == 'all' || Array.from(selectedProject).length == 0) {
+      return [];
+    }
+    return [...Object.values(projects[Array.from(selectedProject)[0]].tasks)].sort((a, b) =>
+      a.name.localeCompare(b.name),
+    );
+  }, [projects, selectedProject]);
 
-  function sortedSubTasks(task: Task) {
-    return [...Object.values(task.subtasks)].sort((a, b) => a.name.localeCompare(b.name));
-  }
+  const sortedSubTasks = React.useMemo(() => {
+    if (!selectedTask || selectedTask == 'all' || Array.from(selectedTask).length == 0) {
+      return [];
+    }
+    return [...Object.values(tasks[Array.from(selectedTask)[0]].subtasks)].sort((a, b) =>
+      a.name.localeCompare(b.name),
+    );
+  }, [tasks, selectedTask]);
+
+  const timerHandler = (e: React.MouseEvent<HTMLButtonElement>) => {
+    if (runningState === RUNSTAT_RUNNABLE) {
+      if (!selectedSubTask || selectedSubTask == 'all' || Array.from(selectedSubTask).length == 0) {
+        // Task
+      }
+    } else if (runningState === RUNSTAT_RUNNING) {
+    }
+  };
 
   useEffect(() => {
     if (Array.from(selectedSpace).length > 0) {
       setSelectedProject(new Set([]));
       setSelectedTask(new Set([]));
       setSelectedSubTask(new Set([]));
-      if (canRun) setCanRun(false);
+      if (runningState === RUNSTAT_RUNNABLE) setRunningState(RUNSTAT_UNAVAILABLE);
     }
   }, [selectedSpace]);
 
@@ -73,7 +101,7 @@ export default function Header() {
     if (Array.from(selectedProject).length > 0) {
       setSelectedTask(new Set([]));
       setSelectedSubTask(new Set([]));
-      if (canRun) setCanRun(false);
+      if (runningState === RUNSTAT_RUNNABLE) setRunningState(RUNSTAT_UNAVAILABLE);
     }
   }, [selectedProject]);
 
@@ -90,15 +118,13 @@ export default function Header() {
         selectedTask &&
         selectedTask != 'all' &&
         Array.from(selectedTask).length != 0 &&
-        Object.values(
-          spaces[Array.from(selectedSpace)[0]].projects[Array.from(selectedProject)[0]].tasks[
-            Array.from(selectedTask)[0]
-          ].subtasks,
-        ).length == 0;
-      if (available && !canRun) setCanRun(true);
-      else if (!available && canRun) setCanRun(false);
+        Object.values(tasks[Array.from(selectedTask)[0]].subtasks).length == 0;
+
+      if (available && runningState === RUNSTAT_UNAVAILABLE) setRunningState(RUNSTAT_RUNNABLE);
+      else if (!available && runningState === RUNSTAT_RUNNABLE)
+        setRunningState(RUNSTAT_UNAVAILABLE);
     }
-  }, [selectedTask]);
+  }, [selectedTask, tasks]);
 
   useEffect(() => {
     if (Array.from(selectedSubTask).length > 0) {
@@ -116,20 +142,17 @@ export default function Header() {
           spaces[Array.from(selectedSpace)[0]].projects[Array.from(selectedProject)[0]].tasks[
             Array.from(selectedTask)[0]
           ].subtasks,
-        ).length > 0;
-      selectedSubTask &&
+        ).length > 0 &&
+        selectedSubTask &&
         selectedSubTask != 'all' &&
         Array.from(selectedSubTask).length != 0 &&
-        Object.values(
-          spaces[Array.from(selectedSpace)[0]].projects[Array.from(selectedProject)[0]].tasks[
-            Array.from(selectedTask)[0]
-          ].subtasks[Array.from(selectedSubTask)[0]].subtasks,
-        ).length == 0;
+        Object.values(subtasks[Array.from(selectedSubTask)[0]].subtasks).length == 0;
 
-      if (available && !canRun) setCanRun(true);
-      else if (!available && canRun) setCanRun(false);
+      if (available && runningState === RUNSTAT_UNAVAILABLE) setRunningState(RUNSTAT_RUNNABLE);
+      else if (!available && runningState === RUNSTAT_RUNNABLE)
+        setRunningState(RUNSTAT_UNAVAILABLE);
     }
-  }, [selectedSubTask]);
+  }, [selectedSubTask, subtasks]);
 
   return (
     <header>
@@ -152,6 +175,7 @@ export default function Header() {
             items={sortedSpaces}
             selectedKeys={selectedSpace}
             onSelectionChange={setSelectedSpace}
+            isDisabled={runningState === RUNSTAT_RUNNING}
             label="Select Space"
             className="max-w-xs"
           >
@@ -159,14 +183,10 @@ export default function Header() {
           </Select>
 
           <Select
-            items={
-              selectedSpace && selectedSpace != 'all' && Array.from(selectedSpace).length > 0
-                ? sortedProjects(spaces[Array.from(selectedSpace)[0]])
-                : []
-            }
+            items={sortedProjects}
             selectedKeys={selectedProject}
             onSelectionChange={setSelectedProject}
-            isDisabled={Array.from(selectedSpace).length == 0}
+            isDisabled={Array.from(selectedSpace).length == 0 || runningState === RUNSTAT_RUNNING}
             label="Select Project"
             className="max-w-xs"
           >
@@ -174,16 +194,10 @@ export default function Header() {
           </Select>
 
           <Select
-            items={
-              selectedProject && selectedProject != 'all' && Array.from(selectedProject).length > 0
-                ? sortedTasks(
-                    spaces[Array.from(selectedSpace)[0]].projects[Array.from(selectedProject)[0]],
-                  )
-                : []
-            }
+            items={sortedTasks}
             selectedKeys={selectedTask}
             onSelectionChange={setSelectedTask}
-            isDisabled={Array.from(selectedProject).length == 0}
+            isDisabled={Array.from(selectedProject).length == 0 || runningState === RUNSTAT_RUNNING}
             label="Select Task"
             className="max-w-xs"
           >
@@ -191,23 +205,13 @@ export default function Header() {
           </Select>
 
           <Select
-            items={
-              selectedTask && selectedTask != 'all' && Array.from(selectedTask).length > 0
-                ? sortedSubTasks(
-                    spaces[Array.from(selectedSpace)[0]].projects[Array.from(selectedProject)[0]]
-                      .tasks[Array.from(selectedTask)[0]],
-                  )
-                : []
-            }
+            items={sortedSubTasks}
             selectedKeys={selectedSubTask}
             onSelectionChange={setSelectedSubTask}
             isDisabled={
               Array.from(selectedTask).length == 0 ||
-              Object.values(
-                spaces[Array.from(selectedSpace)[0]].projects[Array.from(selectedProject)[0]].tasks[
-                  Array.from(selectedTask)[0]
-                ].subtasks,
-              ).length == 0
+              Object.values(tasks[Array.from(selectedTask)[0]].subtasks).length == 0 ||
+              runningState === RUNSTAT_RUNNING
             }
             label="Select SubTask"
             className="max-w-xs"
@@ -217,14 +221,15 @@ export default function Header() {
 
           <button
             className="flex  rounded-full p-1 disabled:bg-errorContainer disabled:text-onErrorContainer"
-            disabled={!canRun}
+            disabled={runningState === RUNSTAT_UNAVAILABLE}
+            onClick={timerHandler}
           >
             <GSymbolOutlined
               fill={1}
               opticalSize={36}
-              iconColor={canRun ? 'onErrorContainer' : 'onSurface'}
+              iconColor={runningState === RUNSTAT_UNAVAILABLE ? 'onErrorContainer' : 'onSurface'}
             >
-              play_arrow
+              {runningState === RUNSTAT_RUNNING ? 'play_arrow' : 'stop'}
             </GSymbolOutlined>
           </button>
         </>

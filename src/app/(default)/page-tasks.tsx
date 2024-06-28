@@ -20,7 +20,7 @@ import {
 } from '@nextui-org/react';
 import React, { Key, useEffect } from 'react';
 import { GSymbolOutlined } from '../components/GSymbol';
-import { useSpaces } from '../context/SpacesProvider';
+import { useSpaces } from '../context/DbProvider';
 
 interface TableRowItem {
   element: Space | Project | Task;

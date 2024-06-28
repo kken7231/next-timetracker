@@ -6,7 +6,7 @@ import { Inter, Roboto_Mono } from 'next/font/google';
 import { AuthProvider } from '@/app/context/AuthProvider';
 import { PagingProvider } from '@/app/context/PagingProvider';
 import { NextUIProvider } from '@nextui-org/react';
-import { SpacesProvider } from '../context/SpacesProvider';
+import { DbProvider } from '../context/DbProvider';
 
 // Force next.js to treat this route as server-side rendered
 // Without this line, during the build process, next.js will treat this route as static and build a static HTML file for it
@@ -38,10 +38,10 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
         <NextUIProvider>
           <AuthProvider>
             <PagingProvider>
-              <SpacesProvider>
+              <DbProvider>
                 <Header />
                 {children}
-              </SpacesProvider>
+              </DbProvider>
             </PagingProvider>
           </AuthProvider>
         </NextUIProvider>
