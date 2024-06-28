@@ -52,6 +52,7 @@ function axesCheck(axes: SymbolAxes): SymbolAxes {
 }
 
 export function GSymbol({
+  className = '',
   type,
   size = OPTICAL_SIZE_DEFAULT,
   fill = FILL_DEFAULT,
@@ -61,6 +62,7 @@ export function GSymbol({
   iconColor = COLOR_DEFAULT,
   children,
 }: {
+  className: string;
   type: 'outlined' | 'rounded' | 'sharp';
   size: number;
   fill: number;
@@ -73,7 +75,7 @@ export function GSymbol({
   const fixedAxes = axesCheck({ size, fill, weight, grade, opticalSize });
   return (
     <span
-      className={`material-symbols-${type}`}
+      className={`material-symbols-${type} ${className}`}
       style={{
         ['fontVariationSettings' as any]: `'FILL' ${fixedAxes.fill}, 'wght' ${fixedAxes.weight}, 'GRAD' ${fixedAxes.grade}, 'opsz' ${fixedAxes.opticalSize}`,
         fontSize: fixedAxes.size,
@@ -85,6 +87,7 @@ export function GSymbol({
   );
 }
 export function GSymbolOutlined({
+  className = '',
   size = 0,
   fill = FILL_DEFAULT,
   weight = WEIGHT_DEFAULT,
@@ -93,6 +96,7 @@ export function GSymbolOutlined({
   iconColor = COLOR_DEFAULT,
   children,
 }: {
+  className?: string;
   fill?: number;
   size?: number;
   weight?: number;
@@ -103,6 +107,7 @@ export function GSymbolOutlined({
 }) {
   return (
     <GSymbol
+      className={className}
       type="outlined"
       size={size === 0 ? opticalSize : size}
       fill={fill}
@@ -117,6 +122,7 @@ export function GSymbolOutlined({
 }
 
 export function GSymbolRounded({
+  className = '',
   size = 0,
   fill = FILL_DEFAULT,
   weight = WEIGHT_DEFAULT,
@@ -125,6 +131,7 @@ export function GSymbolRounded({
   iconColor = COLOR_DEFAULT,
   children,
 }: {
+  className?: string;
   fill?: number;
   size?: number;
   weight?: number;
@@ -135,6 +142,7 @@ export function GSymbolRounded({
 }) {
   return (
     <GSymbol
+      className={className}
       type="rounded"
       size={size === 0 ? opticalSize : size}
       fill={fill}
@@ -149,6 +157,7 @@ export function GSymbolRounded({
 }
 
 export function GSymbolSharp({
+  className = '',
   size = 0,
   fill = FILL_DEFAULT,
   weight = WEIGHT_DEFAULT,
@@ -157,6 +166,7 @@ export function GSymbolSharp({
   iconColor = COLOR_DEFAULT,
   children,
 }: {
+  className?: string;
   fill?: number;
   size?: number;
   weight?: number;
@@ -167,6 +177,7 @@ export function GSymbolSharp({
 }) {
   return (
     <GSymbol
+      className={className}
       type="sharp"
       size={size === 0 ? opticalSize : size}
       fill={fill}

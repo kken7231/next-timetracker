@@ -2,9 +2,27 @@
 
 import Link from 'next/link';
 import { useAuth } from '@/app/context/AuthProvider';
-import { useEffect, useState } from 'react';
-import { Button } from '@headlessui/react';
-import { getSpaces } from '@/lib/firebase/firestore';
+import { Suspense, useEffect, useMemo, useState } from 'react';
+import {
+  Project,
+  Space,
+  constructSpaces,
+  createProject,
+  createSpace,
+  createSubTask,
+  createTask,
+  getAllProjects,
+  getAllSpaces,
+  getAllTasks,
+  getProjects,
+  getSpaces,
+  getSubTasks,
+  getTasks,
+} from '@/lib/firebase/firestore';
+import { usePaging } from '../context/PagingProvider';
+import TimelinePage from './page-timeline';
+import TasksPage from './page-tasks';
+import { SpacesProvider, useSpaces } from '../context/SpacesProvider';
 
 // Force next.js to treat this route as server-side rendered
 // Without this line, during the build process, next.js will treat this route as static and build a static HTML file for it
@@ -12,10 +30,31 @@ export const dynamic = 'force-dynamic';
 
 export default function Home() {
   const { user, isLoading } = useAuth();
+  const { currentPage } = usePaging();
   const [localIsLoading, setLocalIsLoading] = useState<boolean>(true);
+  const { setSpaces } = useSpaces();
+
   useEffect(() => {
     setLocalIsLoading(isLoading);
   }, [isLoading]);
+
+  async function load() {
+    Promise.all([getAllSpaces(), getAllProjects(), getAllTasks()])
+      .then((values) =>
+        setSpaces(
+          Object.fromEntries(
+            constructSpaces(values[0], values[1], values[2]).map((space) => [space.id, space]),
+          ),
+        ),
+      )
+      .catch((error) => console.error(`Error when constructing the task tree: ${error}`));
+  }
+
+  useEffect(() => {
+    if (user) {
+      load();
+    }
+  }, [user]);
 
   return (
     <main className="content">
@@ -23,55 +62,11 @@ export default function Home() {
         {localIsLoading ? (
           <p className="text-center">Loading...</p>
         ) : user ? (
-          <section className="features">
-            <Button
-              id="btn"
-              onClick={(e: React.MouseEvent<HTMLElement>) => getSpaces()}
-            >
-              getSpaces
-            </Button>
-            <article className="card">
-              <h2>Scalable, serverless backends</h2>
-              <p>
-                Dynamic content is served by{' '}
-                <Link
-                  href="https://cloud.google.com/run/docs/overview/what-is-cloud-run"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  Cloud Run
-                </Link>
-                , a fully managed container that scales up and down with demand.
-                Visit{' '}
-                <Link href="/ssr">
-                  <code>/ssr</code>
-                </Link>{' '}
-                and{' '}
-                <Link href="/ssr/streaming">
-                  <code>/ssr/streaming</code>
-                </Link>{' '}
-                to see the server in action.
-              </p>
-            </article>
-            <article className="card">
-              <h2>Global CDN</h2>
-              <p>
-                Cached content is served by{' '}
-                <Link
-                  href="https://cloud.google.com/cdn/docs/overview"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  Google Cloud CDN
-                </Link>
-                , a fast and secure way to host cached content globally. Visit
-                <Link href="/ssg">
-                  {' '}
-                  <code>/ssg</code>
-                </Link>{' '}
-              </p>
-            </article>
-          </section>
+          currentPage.id === 'tasks' ? (
+            <TasksPage />
+          ) : (
+            <TimelinePage />
+          )
         ) : (
           <p className="text-center">You are not authenticated.</p>
         )}

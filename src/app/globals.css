@@ -96,7 +96,7 @@
   }
 
   body {
-    @apply w-screen h-screen bg-surface;
+    @apply w-screen min-h-screen bg-surface;
   }
 
   header {

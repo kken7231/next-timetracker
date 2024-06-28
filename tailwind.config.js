@@ -1,8 +1,12 @@
 /** @type {import('tailwindcss').Config} */
 const colors = require('tailwindcss/colors');
+const { nextui } = require('@nextui-org/react');
 
 module.exports = {
-  content: ['./src/**/*.{js,ts,jsx,tsx,mdx}'],
+  content: [
+    './src/**/*.{js,ts,jsx,tsx,mdx}',
+    './node_modules/@nextui-org/theme/dist/**/*.{js,ts,jsx,tsx}',
+  ],
   theme: {
     fontFamily: {
       // https://nextjs.org/docs/app/building-your-application/optimizing/fonts#with-tailwind-css
@@ -71,5 +75,6 @@ module.exports = {
     },
     extend: {},
   },
-  plugins: [],
+  darkMode: 'class',
+  plugins: [nextui()],
 };

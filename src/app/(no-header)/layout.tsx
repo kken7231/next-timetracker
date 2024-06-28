@@ -4,6 +4,7 @@ import '@/app/globals.css';
 import { getAuthenticatedAppForUser } from '@/lib/firebase/serverApp';
 
 import { Inter, Roboto_Mono } from 'next/font/google';
+import { NextUIProvider } from '@nextui-org/react';
 
 // Force next.js to treat this route as server-side rendered
 // Without this line, during the build process, next.js will treat this route as static and build a static HTML file for it
@@ -38,7 +39,9 @@ export default async function RootLayout({
         {/* eslint-disable-next-line @next/next/no-page-custom-font */}
       </head>
       <body>
-        {currentUser ? <h1>You are already authenticaed.</h1> : children}
+        <NextUIProvider>
+          {currentUser ? <h1>You are already authenticaed.</h1> : children}
+        </NextUIProvider>
       </body>
     </html>
   );

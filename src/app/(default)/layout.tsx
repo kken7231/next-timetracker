@@ -5,6 +5,8 @@ import Header from '@/app/components/Header';
 import { Inter, Roboto_Mono } from 'next/font/google';
 import { AuthProvider } from '@/app/context/AuthProvider';
 import { PagingProvider } from '@/app/context/PagingProvider';
+import { NextUIProvider } from '@nextui-org/react';
+import { SpacesProvider } from '../context/SpacesProvider';
 
 // Force next.js to treat this route as server-side rendered
 // Without this line, during the build process, next.js will treat this route as static and build a static HTML file for it
@@ -28,21 +30,21 @@ const roboto_mono = Roboto_Mono({
   variable: '--font-roboto-mono',
 });
 
-export default async function RootLayout({
-  children,
-}: Readonly<{ children: React.ReactNode }>) {
+export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en" className={`${inter.variable} ${roboto_mono.variable}`}>
-      <head>
-        {/* eslint-disable-next-line @next/next/no-page-custom-font */}
-      </head>
+      <head>{/* eslint-disable-next-line @next/next/no-page-custom-font */}</head>
       <body>
-        <AuthProvider>
-          <PagingProvider>
-            <Header />
-            {children}
-          </PagingProvider>
-        </AuthProvider>
+        <NextUIProvider>
+          <AuthProvider>
+            <PagingProvider>
+              <SpacesProvider>
+                <Header />
+                {children}
+              </SpacesProvider>
+            </PagingProvider>
+          </AuthProvider>
+        </NextUIProvider>
       </body>
     </html>
   );

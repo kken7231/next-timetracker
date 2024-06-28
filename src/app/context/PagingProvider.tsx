@@ -1,17 +1,15 @@
 'use client';
 
 // context/AuthContext.js
-import { createContext, useContext, useEffect, useState } from 'react';
-import { firebaseConfig } from '@/lib/firebase/config';
-import { User } from 'firebase/auth';
-import { useRouter } from 'next/navigation';
-import {
-  onAuthStateChanged,
-  signInWithEmail,
-  signOut,
-} from '@/lib/firebase/auth';
+import { createContext, useContext, useState } from 'react';
 
-export const pages = ['aaaa', 'bbbb'] as const;
+export const pages = [
+  {
+    id: 'tasks',
+    label: 'Tasks',
+  },
+  { id: 'timeline', label: 'Timeline' },
+];
 export type Page = (typeof pages)[number];
 
 export interface PagingContextProps {
@@ -29,7 +27,10 @@ export const PagingProvider = ({ children }: { children: React.ReactNode }) => {
       value={
         {
           currentPage: page,
-          pageTo: (to: Page) => setPage(to),
+          pageTo: (to: Page) => {
+            setPage(to);
+            console.log(`page set to ${to.label}`);
+          },
         } as PagingContextProps
       }
     >

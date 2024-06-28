@@ -1,7 +1,7 @@
 'use client';
+import { GSymbolOutlined } from '@/app/components/GSymbol';
 import { signInWithEmail } from '@/lib/firebase/auth';
-import { Button, Description, Field, Input, Label } from '@headlessui/react';
-import { error } from 'console';
+import { Button, Input } from '@nextui-org/react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
@@ -10,6 +10,10 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [status, setStatus] = useState('');
   const router = useRouter();
+
+  const [isPasswordVisible, setIsPasswordVisible] = useState(false);
+
+  const toggleVisibility = () => setIsPasswordVisible(!isPasswordVisible);
 
   const handleSubmit = async (event: React.MouseEvent<HTMLElement>) => {
     event.preventDefault();
@@ -24,44 +28,48 @@ export default function Login() {
   };
 
   return (
-    <div className="container m-auto flex flex-col gap-10 justify-center items-center py-10 min-h-full ">
-      <Field>
-        <Label id="field-label">E-mail</Label>
-        {/* <Description id="field-desc">
-            Use your real name so people will recognize you.
-          </Description> */}
+    <div className="container m-auto flex flex-col gap-10 justify-center items-center py-10 min-h-screen ">
+      <div className="flex flex-col gap-10">
         <Input
+          size="lg"
           type="email"
-          id="input"
+          label="Email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          placeholder="Email"
+          className="w-full"
         />
-      </Field>
-      <Field>
-        <Label id="field-label">Password</Label>
-        {/* <Description id="field-desc">
-            Use your real name so people will recognize you.
-          </Description> */}
         <Input
+          size="lg"
           type="password"
-          id="input"
+          label="Password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          placeholder="Password"
+          endContent={
+            <button
+              className="focus:outline-none"
+              type="button"
+              onClick={toggleVisibility}
+            >
+              {isPasswordVisible ? (
+                <GSymbolOutlined size={24} iconColor="black">
+                  visibility
+                </GSymbolOutlined>
+              ) : (
+                <GSymbolOutlined size={24} iconColor="black">
+                  visibility_off
+                </GSymbolOutlined>
+              )}
+            </button>
+          }
+          className="w-full"
         />
-      </Field>
-      <Field className="flex flex-col">
-        {status !== '' && <Label id="field-desc">{status}</Label>}
-        <Button
-          id="btn"
-          className="m-auto"
-          type="submit"
-          onClick={handleSubmit}
-        >
+      </div>
+      <div className="flex flex-col">
+        {status !== '' && <p id="field-desc">{status}</p>}
+        <Button className="m-auto" type="submit" onClick={handleSubmit}>
           Sign In
         </Button>{' '}
-      </Field>
+      </div>
     </div>
   );
 }
